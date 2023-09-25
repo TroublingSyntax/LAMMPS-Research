@@ -1,0 +1,42 @@
+dimension 3
+boundary p p m
+units real
+
+atom_style charge
+read_data Ni.dat
+
+group Ni type 1
+
+region electricfield1 block 0.0 10.50 0.0 12.0 9.0 11.0
+
+group eef region electricfield1
+
+#ReaXFF
+pair_style reax/c NULL
+pair_coeff * * ffield.reax Ni
+
+neighbor 2 bin
+neigh_modify every 10 delay 0 check no
+
+fix 1 all nvt temp 300.0 300.0 1000.0
+fix 2 all qeq/reax 1 0.0 10.0 1e-6 reax/c
+
+fix 3 all reax/c/species 1 50 1000 species.out element Ni position 1000 Ni.pos
+fix 4 all reax/c/bonds 1000 bonds.reaxc
+
+velocity all create 300.0 4928459 rot yes mom yes
+
+minimize 1.0e-6 1.0e-8 1000 1000
+
+compute charge all property/atom q
+dump 102 all custom 1000 dump.charge id type x y z c_charge
+
+thermo 1000
+thermo_style custom step temp pe ke etotal
+
+#run variables
+timestep 0.10
+run 40000
+
+fix 5 eef efield 0.0 0.0 0.6
+run 20000
