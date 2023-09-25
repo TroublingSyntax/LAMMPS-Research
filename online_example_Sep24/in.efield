@@ -18,7 +18,7 @@ pair_coeff * * ffield.reax Ni
 neighbor 2 bin
 neigh_modify every 10 delay 0 check no
 
-fix 1 all nvt temp 300.0 300.0 1000.0
+fix 1 all nvt temp 300.0 300.0 $(100.0*dt)
 fix 2 all qeq/reax 1 0.0 10.0 1e-6 reax/c
 
 fix 3 all reax/c/species 1 50 1000 species.out element Ni position 1000 Ni.pos
