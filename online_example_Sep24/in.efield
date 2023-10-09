@@ -29,14 +29,14 @@ velocity all create 300.0 4928459 rot yes mom yes
 minimize 1.0e-6 1.0e-8 1000 1000
 
 compute charge all property/atom q
-dump 102 all custom 1000 dump.charge id type x y z c_charge
+dump 102 all custom 1000 dump.charge5 id type x y z c_charge
 
 thermo 1000
-thermo_style custom step temp pe ke etotal
+thermo_style custom step temp pe ke etotal vol
 
 #run variables
 timestep 0.10
 run 40000
 
-fix 5 eef efield 0.0 0.0 0.6
+fix 5 eef efield 0.0 0.0 1.0
 run 20000
