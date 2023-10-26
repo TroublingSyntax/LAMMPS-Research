@@ -1,0 +1,50 @@
+# simple, scaled lennard jones units
+units lj
+# simple atom style atomic for basic attributes
+atom_style atomic
+# 3 dimensional simulation
+dimension 3
+# periodic boundary conditions
+boundary p p p
+
+# simple box type lattice with density 0.6
+lattice sc 0.60
+# create a 10^3 region in space called "box"
+region box block 0 10 0 10 0 10
+# create a simulation box around the region called "box"
+create_box 1 box
+# create atoms of type "1" in a random fashion
+create_atoms 1 random 100 57 box
+
+# defining interactions among atoms, potentials stop at 3.5 radii away
+pair_style lj/cut 3.5
+# if at this point of 3.5 diameters, then set to 0
+pair_modify shift yes
+# pair coefficients for any type interacting with any type set to 1.0 and 1.0
+pair_coeff * * 1.0 1.0
+# set mass to 1.0 for atom type "1"
+mass 1 1.0
+
+# neighbor cutoff should be 0.3 atom radii further than lennard jones cutoff (3.8)
+neighbor 0.3 bin
+# update the neighbor list every 10 steps, every time
+neigh_modify delay 10 every 1
+
+# fix a temperature to all particles in the system
+fix 1 all nvt temp 1.00 1.00 5.0
+# every 50 timesteps, re-zero linear moment of all particles
+fix LinMom all momentum 50 linear 1 1 1 angular
+
+compute 1 all temp
+
+#velocity all create 1.0 199085 mom nofix 1 all npt temp 1.0 1.0 25.0 iso 1.5150 1.5150 10.0
+
+dump 102 all atom 100 dump.temp
+
+timestep 0.005
+
+thermo_style custom step temp etotal pe ke press vol density
+thermo 500
+run_style verlet
+
+run 10000
