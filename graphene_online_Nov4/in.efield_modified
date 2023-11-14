@@ -4,9 +4,8 @@
 ### Version 0.2 - 03/09/2022###
 
 variable name string graphene_crumple_v2
-
+variable real_field equal input_from_shell*0.015
 log log.${name}
-
 
 #--------------Initialize Simulation--------------------------
 dimension	3
@@ -31,10 +30,10 @@ compute 4 all stress/atom NULL pair
 
 #---------Run the simulation for thermal equilibration--------
 velocity all create 1 4928459 dist uniform
+fix efield gnp efield 0.0 0.0 ${real_field}
 set group gnp charge 0.1
 fix 1 all nvt temp 0.1 0.1 10
 #fix 1 all npt temp 10 10 .4 x 0.0 0.0 .5 y 0.0 0.0 .5
-fix efield gnp efield 0.0 0.0 0.015
 
 thermo 10
 

@@ -1,6 +1,9 @@
 import os
+import time
 
 def dump_parser():
+
+    time.sleep(1)
 
     file = open('/home/kevinlewis/Desktop/LAMMPS-Research/graphene_online_Nov4/dump.graphene_crumple_v2', mode = 'r')
     lines = file.readlines()
