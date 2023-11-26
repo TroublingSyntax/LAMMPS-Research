@@ -1,0 +1,140 @@
+### Created by Eric N. Hahn  ###
+### ericnhahn@gmail.com ###
+### crumpling of a single graphene sheet ###
+### Version 0.2 - 03/09/2022###
+
+variable run_count equal input_from_shell
+
+#log.${name}
+
+#--------------Initialize Simulation--------------------------
+dimension	3
+units           metal
+atom_style      full
+
+#--------------Create Atoms-----------------------------------
+boundary 	p p p	
+
+read_data	data_3_layers_1x3.lammps
+group 		gnp type 1
+fix		gnp gnp rigid single 
+#neigh_modify	every 2 check yes delay 10 one 10000 page 100000
+
+variable real_field equal ${run_count}*0.015
+variable name string graphene_crumple_v2_${run_count}
+
+#--------------Define Interatomic Potential-------------------
+pair_style airebo 3.0
+pair_coeff * * CH.airebo C
+
+
+compute 3 all pe/atom
+compute 4 all stress/atom NULL pair
+
+compute 5 all chunk/atom type
+compute 6 all torque/chunk 5
+
+
+#---------Run the simulation for thermal equilibration--------
+velocity all create 1 4928459 dist uniform
+
+region          half_block1 block -4.0 12.0 25.0 35.0 -1.0 8.0 units box
+group           half_block1 region half_block1
+
+region          half_block2 block -4.0 12.0 0.0 10.0 -1.0 8.0 units box
+group           half_block2 region half_block2
+
+fix efield gnp efield 0.0 0.0 ${real_field}
+
+fix trq_ave all ave/time 1 1 1 c_6[*] file torque_${run_count}.txt mode vector
+
+set group half_block1 charge 0.1
+
+set group half_block2 charge -0.1
+
+fix 1 all nvt temp 0.1 0.1 10
+#fix 1 all npt temp 10 10 .4 x 0.0 0.0 .5 y 0.0 0.0 .5
+
+thermo 10
+
+thermo_style custom step pe ke etotal temp lx ly lz press atoms
+
+dump 1 all custom 25 dump.${name} id x y z vx vy vz c_3 c_4[1] c_4[2] c_4[3] q
+
+timestep 0.001
+
+fix bp all balance 250 1 shift z 10 1
+
+thermo_style custom step temp ke pe press pxx pyy vol
+
+variable runeq equal 5000
+
+run ${runeq}
+
+
+#group graphene region graphene
+
+#variable ymn equal ylo+4
+
+#variable ymx equal yhi-4
+
+#variable xmn equal xlo+4
+
+#variable xmx equal xhi-4
+
+
+#region middle block ${xmn} ${xmx} ${ymn} ${ymx} -5 5 units box
+
+#group middle region middle
+
+#group edge subtract graphene middle
+print "done"
+quit
+#-------------Run the simulation for confinement -----------------
+
+unfix 1
+
+change_box all boundary s s s
+
+run 0
+
+variable r0 equal (ylo^2+xlo^2+zlo^2)^0.5
+
+variable r0fix equal ceil(${r0})  #rounding up here makes it so that the initial radius is larger than the furthest C atom 
+
+                                  #and later helps gets us closer to a round number of steps 
+
+print "The starting radius of the compressing sphere is ~${r0fix} A"
+
+variable rate equal 1.25 #A/ps
+
+variable deltat equal "dt"
+
+variable radius equal "v_r0fix-(step-v_runeq)*dt*v_rate"
+
+variable finalrad equal 10
+
+variable numberofsteps equal round((${r0fix}-${finalrad})/(${deltat}*${rate}))
+
+
+print "running ${numberofsteps} steps to reach a final radius of ~${finalrad} A"
+
+
+fix constrain all indent 1 sphere 0 0 0 v_radius side in units box
+
+thermo_style custom step temp ke pe press pxx pyy vol v_radius f_constrain[1] f_constrain[2] 
+
+
+fix nve all nve
+
+run ${numberofsteps}
+
+
+unfix constrain
+
+thermo_style custom step temp ke pe press pxx pyy vol v_radius
+
+run 2000   #sim for vis at final state
+
+
+print "Job's done" 

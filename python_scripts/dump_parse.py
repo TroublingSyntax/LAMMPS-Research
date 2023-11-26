@@ -1,6 +1,9 @@
 import os
 
-file = open('/home/kevinlewis/Desktop/LAMMPS-Research/graphene_online_Nov4/dump.graphene_crumple_v2', mode = 'r')
+
+run_count = os.environ['PARSE_COUNT']
+
+file = open('/home/kevinlewis/Desktop/LAMMPS-Research/graphene_online_Nov4/dump.graphene_crumple_v2_' + str(run_count), mode = 'r')
 lines = file.readlines()
 file.close()
 
@@ -10,13 +13,11 @@ for line in lines[9:]:
     current_line = lines[index].split()
 
     try:
-        vel_z[index-9] = current_line[6]
+        vel_z[index-9] = current_line[7]
         index += 1
     except IndexError:
         index += 1
         continue
-
-run_count = os.environ['PARSE_COUNT']
 
 output_file = open('vel_z_' + str(run_count) + '.txt','w')
 

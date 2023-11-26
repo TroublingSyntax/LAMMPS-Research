@@ -4,7 +4,7 @@
 ### Version 0.2 - 03/09/2022###
 
 variable name string graphene_crumple_v2
-variable real_field equal input_from_shell*0.015
+variable real_field equal 2*0.015
 log log.${name}
 
 #--------------Initialize Simulation--------------------------
